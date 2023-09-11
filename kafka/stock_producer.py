@@ -24,10 +24,10 @@ def send_message_to_kafka(message):
         return
     
     for entry in parsed_message["data"]:
-        entry["t"] = datetime.fromtimestamp(entry["t"] / 1000).strftime("%Y-%m-%d %H:%M:%S")
+        entry["t"] = datetime.fromtimestamp(entry["t"] / 1000).strftime("%Y-%m-%d %H:%M:%S.%f")
 
         producer.send(KAFKA_TOPIC_NAME, value=entry)
-        print(f"Sent Data: {entry}")
+        print("Sent Data")
     
     producer.flush()
     time.sleep(1)
