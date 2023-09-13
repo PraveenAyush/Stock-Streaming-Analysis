@@ -42,9 +42,9 @@ Here is an example of a dashboard created in Superset:
 3. Install `pyspark`, `mysql-connector-python`, `kafka-python`, and `websocket-client` using pip.
 4. Run `docker-compose up` to build and run the services.
 5. Run the spark_streaming.py script to start the Spark job. The required asset symbols need to be passed as arguments.
-6. Run the db_consumer.py script to start the DB consumer. The topic (*refactored asset symbols) needs to be passed as an argument.
+6. Run the db_consumer.py script to start the DB consumer. The topic (**refactored asset symbols) needs to be passed as an argument.
 7. Run the stock_producer.py script to start the stock producer. The required asset symbols need to be passed as arguments.
 
 *Note*: Make sure to use a linux based OS. Pyspark on windows is a complete mess. But if you really want to use windows, look up how to install winutils and set the HADOOP_HOME environment variable. 
 
-* Refactored asset symbols: The asset symbols need to be refactored to match Kafka's naming conventions. For example, the asset symbol `BITNAMI:BTCUSD` needs to be refactored to `BITNAMI_BTCUSD`. 
+** Refactored asset symbols: The asset symbols need to be refactored to match Kafka's naming conventions. For example, the asset symbol `BITNAMI:BTCUSD` needs to be refactored to `BITNAMI_BTCUSD`. 
