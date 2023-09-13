@@ -64,3 +64,17 @@ services:
     environment:
       MYSQL_DATABASE: stock
       MYSQL_ROOT_PASSWORD: root
+
+  superset:
+    build: 
+      context: ./superset
+      dockerfile: Dockerfile
+    container_name: superset
+    depends_on:
+      - mysql
+    environment:
+      - ADMIN_USERNAME=admin
+      - ADMIN_EMAIL=admin@localhost
+      - ADMIN_PASSWORD=admin
+    ports:
+      - "8088:8088"

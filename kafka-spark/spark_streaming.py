@@ -44,15 +44,17 @@ schema = StructType([
 df = spark.readStream.format("kafka").options(**kafka_params).load()
 
 kafka_df = df.selectExpr("CAST(value AS STRING)", "CAST(timestamp AS TIMESTAMP)") \
-                .withWatermark("timestamp", "20 seconds") \
                 .select(from_json(col("value"), schema).alias("data"))
+                # .withWatermark("timestamp", "20 seconds") \
 
 # Aggregate
 windowed_stream = kafka_df.groupBy(window(col("data.t"), "10 seconds", "10 seconds")) \
-                            .agg(avg(col("data.p")).alias("avg_price"),
-                                _sum(col("data.v")).alias("total_volume"))
+                            .agg(
+                                avg(col("data.p")).alias("avg_price"),
+                                _sum(col("data.v")).alias("total_volume")
+                            ) 
 
-# Write to console
+
 # Write to console
 console_write = ( windowed_stream.writeStream \
     .outputMode("update") \
