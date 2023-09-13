@@ -1,14 +1,34 @@
+import argparse
 import json
+import re
 
 from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import avg, col, from_json, window, sum as _sum
 from pyspark.sql.types import FloatType, StringType, StructField, StructType, TimestampType
 
-from kafka import KafkaProducer
 
 # Kafka settings
 KAFKA_BROKER_URL = "localhost:9092"
+
+# Parse arguments
+parser = argparse.ArgumentParser(
+    prog="spark_streaming", description="Consume data from Kafka, aggregate and publish to Kafka"
+)
+
+parser.add_argument(
+    "--symbol",
+    metavar="symbol",
+    type=str,
+    help="Symbol of asset to subscribe to",
+    required=True
+)
+
+args = parser.parse_args()
+
+# Refactoring string so that it is in the format that Kafka expects
+asset_symbol = args.symbol
+asset_symbol = re.sub(r'[^a-zA-Z0-9._-]', '_', asset_symbol)
 
 # Spark Config
 conf = SparkConf().setAppName("StockData") \
@@ -20,13 +40,10 @@ conf = SparkConf().setAppName("StockData") \
 # Spark Session
 spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
-# Kafka producer
-producer = KafkaProducer(bootstrap_servers=KAFKA_BROKER_URL)
-
 # Define Kafka Source and Configuration
 kafka_params = {
     "kafka.bootstrap.servers": KAFKA_BROKER_URL,
-    "subscribe": "SPARK-BTCUSDT",
+    "subscribe": f"SPARK-{asset_symbol}",
     "startingOffsets": "earliest",
     "value_deserializer": lambda x: json.loads(x.decode('utf-8'))
 }
@@ -45,7 +62,6 @@ df = spark.readStream.format("kafka").options(**kafka_params).load()
 
 kafka_df = df.selectExpr("CAST(value AS STRING)", "CAST(timestamp AS TIMESTAMP)") \
                 .select(from_json(col("value"), schema).alias("data"))
-                # .withWatermark("timestamp", "20 seconds") \
 
 # Aggregate
 windowed_stream = kafka_df.groupBy(window(col("data.t"), "10 seconds", "10 seconds")) \
@@ -71,7 +87,7 @@ query = windowed_stream.selectExpr("to_json(struct(*)) AS value") \
                         .trigger(processingTime="10 seconds") \
                         .format("kafka") \
                         .option("kafka.bootstrap.servers", KAFKA_BROKER_URL) \
-                        .option("topic", "BINANCE-BTCUSDT") \
+                        .option("topic", asset_symbol) \
                         .start()
 
 query.awaitTermination()
