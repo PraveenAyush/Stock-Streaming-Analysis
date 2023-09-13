@@ -9,7 +9,7 @@ from kafka import KafkaProducer
 
 # Kafka settings
 KAFKA_BROKER_URL = "localhost:9092"
-KAFKA_TOPIC_NAME = "BINANCE-BTCUSDT"
+KAFKA_TOPIC_NAME = "SPARK-BTCUSDT"
 
 # Finnhub settings
 FINNHUB_API_KEY = "cjv0gd9r01qlmkvcsc6gcjv0gd9r01qlmkvcsc70"

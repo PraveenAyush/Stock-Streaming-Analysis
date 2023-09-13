@@ -19,27 +19,22 @@ conn = mysql.connector.connect(host=MYSQL_HOST, user=MYSQL_USER, password=MYSQL_
                                 port=MYSQL_PORT)
 cur = conn.cursor()
 
-insert_query = "INSERT INTO stock_data (price, symbol, data_datetime, volume) VALUES (%s, %s, %s, %s)"
-
-values = []
-row_count = 0
-batch_count = 0
-
 # Kafka consumer
 consumer = KafkaConsumer(KAFKA_TOPIC_NAME, bootstrap_servers=KAFKA_BROKER_URL)
 
 for message in consumer:
     data = json.loads(message.value.decode('utf-8'))
 
-    values.append((data['p'], data['s'], data['t'], data['v']))
+    cur.execute(
+        "INSERT INTO stock_data (price, volume, price_datetime) VALUES (%s, %s, %s)",
+        [
+            data['avg_price'],
+            data['total_volume'],
+            data['window']['end']
+        ]
+    )
 
-    row_count += 1
-    batch_count += 1
+    conn.commit()
 
-    if batch_count == 10:
-        cur.executemany(insert_query, values)
-        conn.commit()
-        values = []
-        batch_count = 0
+    print(f"Inserted {data['window']['end']} into MySQL")
 
-        print(f"Inserted {row_count} rows into MySQL")
